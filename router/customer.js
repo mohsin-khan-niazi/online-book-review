@@ -1,6 +1,6 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
-let books = require('./booksdb.js');
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import { books } from './booksdb.js';
 const regd_users = express.Router();
 
 let users = [];
@@ -125,6 +125,4 @@ regd_users.delete('/auth/review/:isbn', (req, res) => {
   return res.status(200).json({ message: 'Review deleted' });
 });
 
-module.exports.authenticated = regd_users;
-module.exports.isValid = isValid;
-module.exports.users = users;
+export { regd_users as authenticated, isValid, users };

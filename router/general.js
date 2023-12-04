@@ -1,7 +1,6 @@
-const express = require('express');
-let books = require('./booksdb.js');
-let isValid = require('./customer.js').isValid;
-let users = require('./customer.js').users;
+import express from 'express';
+import { books } from './booksdb.js';
+import { isValid, users } from './customer.js';
 const public_users = express.Router();
 
 public_users.post('/register', (req, res) => {
@@ -74,4 +73,4 @@ public_users.get('/review/:isbn', function (req, res) {
   return res.status(200).json({ review });
 });
 
-module.exports.general = public_users;
+export { public_users as general };

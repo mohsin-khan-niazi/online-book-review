@@ -1,7 +1,7 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
-const customer_routes = require('./router/customer.js').authenticated;
-const genl_routes = require('./router/general.js').general;
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import { authenticated as customer_routes } from './router/customer.js';
+import { general as genl_routes } from './router/general.js';
 
 const app = express();
 

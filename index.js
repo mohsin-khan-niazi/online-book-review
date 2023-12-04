@@ -2,9 +2,9 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import { authenticated as customer_routes } from './router/customer.js';
 import { general as genl_routes } from './router/general.js';
+import 'dotenv/config';
 
 const app = express();
-
 app.use(express.json());
 
 // Customer authenication mechanism
@@ -21,9 +21,8 @@ app.use('/customer/auth/*', function auth(req, res, next) {
   });
 });
 
-const PORT = 5000;
-
 app.use('/customer', customer_routes);
 app.use('/', genl_routes);
 
-app.listen(PORT, () => console.log('Server is running'));
+const port = process.env.PORT || 5000;
+app.listen(port, () => console.log(`Server is running @ port ${port}`));

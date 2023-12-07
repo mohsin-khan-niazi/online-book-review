@@ -1,6 +1,9 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { books } from './booksdb.js';
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+// import { books } from './booksdb.js';
 const regd_users = express.Router();
 
 let users = [];
@@ -24,7 +27,7 @@ const authenticatedUser = (username, password) => {
 };
 
 //only registered users can login
-regd_users.post('/login', (req, res) => {
+regd_users.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username) {
     return res.status(400).json({ message: 'Username not found' });
@@ -34,29 +37,34 @@ regd_users.post('/login', (req, res) => {
     return res.status(400).json({ message: 'Password not found' });
   }
 
-  const isUserPresent = !isValid(username);
-  if (!isUserPresent) {
-    return res.status(400).json({ message: 'User not registered' });
-  }
+  // const isUserPresent = !isValid(username);
+  // if (!isUserPresent) {
+  //   return res.status(400).json({ message: 'User not registered' });
+  // }
 
-  const isValidUser = authenticatedUser(username, password);
-  if (!isValidUser) {
-    return res
-      .status(401)
-      .json({ message: 'Invalid username and/or password' });
-  }
+  // const isValidUser = authenticatedUser(username, password);
+  // if (!isValidUser) {
+  //   return res
+  //     .status(401)
+  //     .json({ message: 'Invalid username and/or password' });
+  // }
 
+  const user = await prisma.users.findUnique({
+    where: {
+      username,
+      password,
+    },
+  });
   const accessToken = jwt.sign(
     {
-      data: password,
+      id: user.id,
+      role: user.role,
     },
-    'access',
+    process.env.JWT_PRIVATE_KEY,
     { expiresIn: 60 * 60 },
   );
-  req.session.authorization = {
-    accessToken,
-    username,
-  };
+  console.log('user: ', user);
+  console.log('accessToken: ', accessToken);
   return res.status(200).send('User successfully logged in');
 });
 

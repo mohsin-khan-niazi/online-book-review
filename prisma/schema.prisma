@@ -12,8 +12,9 @@ datasource db {
 
 model Users {
   id        Int       @id @default(autoincrement())
+  username  String    @unique
   name      String
-  role      Role      @default(USER)
+  role      Role      @default(user)
   password  String
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt
@@ -45,7 +46,7 @@ model Reviews {
 }
 
 enum Role {
-  USER
-  AUTHOR
-  ADMIN
+  user
+  author
+  admin
 }

@@ -1,24 +1,14 @@
 import express from 'express';
-import jwt from 'jsonwebtoken';
+import 'dotenv/config';
 import { authenticated as customer_routes } from './router/customer.js';
 import { general as genl_routes } from './router/general.js';
-import 'dotenv/config';
+import { authenticateUser } from './middleware/auth-user.js';
 
 const app = express();
 app.use(express.json());
 
-// Customer authenication mechanism
-app.use('/customer/auth/*', function auth(req, res, next) {
-  if (!req.session.authorization) {
-    return res.status(403).json({ message: 'User not logged in' });
-  }
-  const token = req.session.authorization['accessToken'];
-  jwt.verify(token, 'access', (err, user) => {
-    if (!err) {
-      req.user = user;
-      next();
-    } else return res.status(403).json({ message: 'User not authenticated' });
-  });
+app.get('/test', authenticateUser, (req, res) => {
+  return res.status(200).json({ message: 'Authenticated successfully!' });
 });
 
 app.use('/customer', customer_routes);

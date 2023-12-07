@@ -1,10 +1,11 @@
 import express from 'express';
-import { books } from './booksdb.js';
-import { isValid, users } from './customer.js';
+import { PrismaClient } from '@prisma/client';
+import { isValid } from './customer.js';
 const public_users = express.Router();
 
-public_users.post('/register', (req, res) => {
-  const { username, password } = req.body;
+const prisma = new PrismaClient();
+public_users.post('/register', async (req, res) => {
+  const { username, name, password } = req.body;
   if (!username) {
     return res.status(400).json({ message: 'Username not found' });
   }
@@ -13,13 +14,13 @@ public_users.post('/register', (req, res) => {
     return res.status(400).json({ message: 'Password not found' });
   }
 
-  const isUsernameValid = isValid(username);
-  if (!isUsernameValid) {
-    return res.status(400).json({ message: 'Username unavailable' });
-  }
-
-  const user = { username, password };
-  users.push(user);
+  // const isUsernameValid = isValid(username);
+  // if (!isUsernameValid) {
+  // return res.status(400).json({ message: 'Username unavailable' });
+  // }
+  const user = { username, name, password };
+  const result = await prisma.users.create({ data: user });
+  console.log('result: ', result);
   return res.status(200).json({ message: 'User registered' });
 });
 

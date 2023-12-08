@@ -1,29 +1,44 @@
 import express from 'express';
-import jwt from 'jsonwebtoken';
+import jsonwebtoken from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
-
+const { users } = prisma;
 // import { books } from './booksdb.js';
 const regd_users = express.Router();
 
-let users = [];
-
 // check if the username is valid
-const isValid = (username) => {
-  const usernameConflictingUser = users.filter(
-    (user) => user.username == username,
-  );
-  if (usernameConflictingUser.length > 0) return false;
+const isValidUsername = async (username) => {
+  const user = await users.findUnique({
+    where: {
+      username,
+    },
+  });
+  if (user) return false;
   return true;
 };
 
 // check if username and password match the one we have in records.
-const authenticatedUser = (username, password) => {
-  const user = users.filter((user) => {
-    return user.username == username && user.password == password;
+const authenticateUser = async (username, password) => {
+  const user = await users.findUnique({
+    where: {
+      username,
+      password,
+    },
   });
-  if (user.length == 0) return false;
-  return true;
+  if (!user) return false;
+  return { success: true, user };
+};
+
+const signJWT = (user) => {
+  const accessToken = jsonwebtoken.sign(
+    {
+      id: user.id,
+      role: user.role,
+    },
+    process.env.JWT_PRIVATE_KEY,
+    { expiresIn: '1d' },
+  );
+  return accessToken;
 };
 
 //only registered users can login
@@ -37,35 +52,19 @@ regd_users.post('/login', async (req, res) => {
     return res.status(400).json({ message: 'Password not found' });
   }
 
-  // const isUserPresent = !isValid(username);
-  // if (!isUserPresent) {
-  //   return res.status(400).json({ message: 'User not registered' });
-  // }
+  const isValidUser = await authenticateUser(username, password);
+  if (!isValidUser) {
+    return res
+      .status(401)
+      .json({ message: 'Invalid username and/or password' });
+  }
 
-  // const isValidUser = authenticatedUser(username, password);
-  // if (!isValidUser) {
-  //   return res
-  //     .status(401)
-  //     .json({ message: 'Invalid username and/or password' });
-  // }
+  const { user } = isValidUser;
+  const accessToken = signJWT(user);
 
-  const user = await prisma.users.findUnique({
-    where: {
-      username,
-      password,
-    },
-  });
-  const accessToken = jwt.sign(
-    {
-      id: user.id,
-      role: user.role,
-    },
-    process.env.JWT_PRIVATE_KEY,
-    { expiresIn: 60 * 60 },
-  );
-  console.log('user: ', user);
-  console.log('accessToken: ', accessToken);
-  return res.status(200).send('User successfully logged in');
+  return res
+    .status(200)
+    .json({ message: 'User successfully logged in', accessToken });
 });
 
 // Add a book review
@@ -133,4 +132,4 @@ regd_users.delete('/auth/review/:isbn', (req, res) => {
   return res.status(200).json({ message: 'Review deleted' });
 });
 
-export { regd_users as authenticated, isValid, users };
+export { regd_users as authenticated, isValidUsername, users };
